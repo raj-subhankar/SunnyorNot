@@ -8,6 +8,8 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 
 import com.android.subhankar.sunnyornot.data.WeatherContract;
+import com.android.subhankar.sunnyornot.data.WeatherContract.LocationEntry;
+import com.android.subhankar.sunnyornot.data.WeatherContract.WeatherEntry;
 import com.android.subhankar.sunnyornot.data.WeatherDbHelper;
 
 /**
@@ -34,27 +36,27 @@ public class TestDb extends AndroidTestCase {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, testName);
-        values.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, testLocationSettings);
-        values.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, testLatitude);
-        values.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, testLongitude);
+        values.put(LocationEntry.COLUMN_CITY_NAME, testName);
+        values.put(LocationEntry.COLUMN_LOCATION_SETTING, testLocationSettings);
+        values.put(LocationEntry.COLUMN_COORD_LAT, testLatitude);
+        values.put(LocationEntry.COLUMN_COORD_LONG, testLongitude);
 
         long locationRowId;
-        locationRowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, values);
+        locationRowId = db.insert(LocationEntry.TABLE_NAME, null, values);
 
         assertTrue(locationRowId != -1);
         Log.d(LOG_TAG, "New row id" + locationRowId);
 
         String[] columns = {
-                WeatherContract.LocationEntry._ID,
-                WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING,
-                WeatherContract.LocationEntry.COLUMN_CITY_NAME,
-                WeatherContract.LocationEntry.COLUMN_COORD_LAT,
-                WeatherContract.LocationEntry.COLUMN_COORD_LONG
+                LocationEntry._ID,
+                LocationEntry.COLUMN_LOCATION_SETTING,
+                LocationEntry.COLUMN_CITY_NAME,
+                LocationEntry.COLUMN_COORD_LAT,
+                LocationEntry.COLUMN_COORD_LONG
         };
 
         Cursor cursor = db.query(
-                WeatherContract.LocationEntry.TABLE_NAME,
+                LocationEntry.TABLE_NAME,
                 columns,
                 null,
                 null,
@@ -64,17 +66,80 @@ public class TestDb extends AndroidTestCase {
         );
 
         if (cursor.moveToFirst()) {
-            int locationIndex = cursor.getColumnIndex(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING);
+            int locationIndex = cursor.getColumnIndex(LocationEntry.COLUMN_LOCATION_SETTING);
             String location = cursor.getString(locationIndex);
 
-            int nameIndex = cursor.getColumnIndex(WeatherContract.LocationEntry.COLUMN_CITY_NAME);
+            int nameIndex = cursor.getColumnIndex(LocationEntry.COLUMN_CITY_NAME);
             String name = cursor.getString(nameIndex);
 
-            int latIndex = cursor.getColumnIndex(WeatherContract.LocationEntry.COLUMN_COORD_LAT);
+            int latIndex = cursor.getColumnIndex(LocationEntry.COLUMN_COORD_LAT);
             double latitude = cursor.getDouble(latIndex);
 
-            int longIndex = cursor.getColumnIndex(WeatherContract.LocationEntry.COLUMN_COORD_LONG);
+            int longIndex = cursor.getColumnIndex(LocationEntry.COLUMN_COORD_LONG);
             double longitude = cursor.getDouble(longIndex);
+
+            assertEquals(testName, name);
+            assertEquals(testLocationSettings, location);
+            assertEquals(testLatitude, latitude);
+            assertEquals(testLongitude, longitude);
+
+            ContentValues weatherValues = new ContentValues();
+            weatherValues.put(WeatherEntry.COLUMN_LOC_KEY, locationRowId);
+            weatherValues.put(WeatherEntry.COLUMN_DATETEXT, "20141205");
+            weatherValues.put(WeatherEntry.COLUMN_DEGREES, 1.1);
+            weatherValues.put(WeatherEntry.COLUMN_HUMIDITY, 1.2);
+            weatherValues.put(WeatherEntry.COLUMN_PRESSURE, 1.3);
+            weatherValues.put(WeatherEntry.COLUMN_MAX_TEMP, 75);
+            weatherValues.put(WeatherEntry.COLUMN_MIN_TEMP, 65);
+            weatherValues.put(WeatherEntry.COLUMN_SHORT_DESC, "Asteroids");
+            weatherValues.put(WeatherEntry.COLUMN_WIND_SPEED, 5.5);
+            weatherValues.put(WeatherEntry.COLUMN_WEATHER_ID, 321);
+
+            long weatherRowId;
+            weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
+            assertTrue(weatherRowId != -1);
+
+            Cursor weatherCursor = db.query(
+                    LocationEntry.TABLE_NAME,
+                    columns,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            if(weatherCursor.moveToFirst()) {
+                int dateIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_DATETEXT);
+                String date = weatherCursor.getString(locationIndex);
+
+                int degreesIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_DEGREES);
+                double degrees = weatherCursor.getDouble(degreesIndex);
+
+                int humidIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_HUMIDITY);
+                double humidity = weatherCursor.getDouble(humidIndex);
+
+                int pressureIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_PRESSURE);
+                double pressure = weatherCursor.getDouble(pressureIndex);
+
+                int maxIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_MAX_TEMP);
+                double max = weatherCursor.getDouble(maxIndex);
+
+                int minIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_MIN_TEMP);
+                double min = weatherCursor.getDouble(minIndex);
+
+                int descIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_SHORT_DESC);
+                double desc = weatherCursor.getDouble(descIndex);
+
+                int windIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_WIND_SPEED);
+                double windSpeed = weatherCursor.getDouble(windIndex);
+
+                int weatherIdIndex = weatherCursor.getColumnIndex(WeatherEntry.COLUMN_WEATHER_ID);
+                int weather_id = weatherCursor.getInt(weatherIdIndex);
+
+            } else {
+                fail("No weather data returned!");
+            }
 
         } else {
             fail("No values returned");
